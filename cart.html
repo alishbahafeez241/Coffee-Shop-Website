@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="cartApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Beans – Your Cart</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #faf6f0 0%, #f0e8df 100%);
+            min-height: 100vh;
+        }
+        .coffee-header {
+    background-color: #2c1810;
+    color: #f5e6d3;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 3px solid #c4a27a;
+}
+
+.coffee-header h1 { 
+    font-size: 2.5rem; 
+    letter-spacing: 2px; 
+    margin-bottom: 0.5rem; 
+    font-weight: 600;
+}
+
+.coffee-header h1 i { 
+    margin-right: 10px;
+    color: #c4a27a;
+}
+
+/* Navbar Styles */
+.nav-coffee {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0;
+}
+
+.nav-coffee .nav-link {
+    color: #f5e6d3;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.nav-coffee .nav-link:hover {
+    color: #c4a27a;
+    background: rgba(196, 162, 122, 0.2);
+}
+
+/* ACTIVE PAGE - Circle/Brown Background */
+.nav-coffee .nav-link.active {
+    color: #2c1810 !important;
+    background: #e0b586 !important;
+    font-weight: bold;
+    border-radius: 30px;
+    padding: 0.5rem 1.2rem;
+}
+        
+        .cart-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        h2 { 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            margin-bottom: 1.5rem; 
+            color: #2c1810;
+            border-left: 4px solid #c4a27a;
+            padding-left: 15px;
+        }
+        
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .cart-table th, .cart-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e8ddd0;
+        }
+        
+        .cart-table th {
+            background: #2c1810;
+            color: #f5e6d3;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .cart-table tr:hover {
+            background: #faf6f0;
+        }
+        
+        .qty-input {
+            width: 70px;
+            padding: 8px;
+            border: 2px solid #e0d5c1;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .qty-input:focus {
+            outline: none;
+            border-color: #6F4E37;
+        }
+        
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        
+        .remove-btn:hover {
+            background: #c82333;
+        }
+        
+        .total-section {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 16px;
+            text-align: right;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .total-price {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c1810;
+        }
+        
+        .total-price span {
+            color: #6F4E37;
+            font-size: 2rem;
+        }
+        
+        .promo-section {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .promo-section input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0d5c1;
+            border-radius: 40px;
+            font-size: 14px;
+        }
+        
+        .promo-section input:focus {
+            outline: none;
+            border-color: #6F4E37;
+        }
+        
+        .apply-btn {
+            background: #6F4E37;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .apply-btn:hover {
+            background: #4A2C1A;
+        }
+        
+        .action-buttons {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary-custom {
+            background: #6F4E37;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary-custom:hover {
+            background: #4A2C1A;
+        }
+        
+        .btn-checkout {
+            background: #28a745;
+        }
+        
+        .btn-checkout:hover {
+            background: #218838;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 16px;
+        }
+        
+        .empty-cart i {
+            font-size: 4rem;
+            color: #c4a27a;
+        }
+        
+        footer {
+            background-color: #2c1810;
+            color: #f5e6d3;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .discount-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        
+        .angular-panel {
+            margin-top: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: #fff8f0;
+            border-radius: 16px;
+            border: 1px dashed #c4a27a;
+            text-align: center;
+        }
+        
+        /* ===== CHECKOUT MODAL ===== */
+        #checkoutModal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #checkoutOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+        #checkoutBox {
+            position: relative; background: white; border-radius: 20px;
+            padding: 2rem; width: 100%; max-width: 480px; max-height: 90vh;
+            overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: coSlideIn 0.25s ease;
+        }
+        @keyframes coSlideIn { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        .checkout-progress {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-bottom: 1.5rem; font-size: 0.85rem; color: #999;
+        }
+        .checkout-progress .prog-active { color: #6F4E37; font-weight: 700; }
+        .checkout-progress .prog-sep { color: #ccc; }
+        .checkout-step-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.1rem; font-weight: 700; color: #2c1810; margin-bottom: 1.2rem;
+        }
+        .step-badge {
+            background: #6F4E37; color: white; border-radius: 50%;
+            width: 28px; height: 28px; display: flex; align-items: center;
+            justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+        }
+        .checkout-field { margin-bottom: 1rem; }
+        .checkout-field label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+        .checkout-field input,
+        .checkout-field textarea,
+        .checkout-field select {
+            width: 100%; padding: 10px 14px; border: 2px solid #e0d5c1;
+            border-radius: 12px; font-size: 14px; transition: border 0.2s;
+            font-family: inherit; background: #fdfaf7;
+        }
+        .checkout-field input:focus,
+        .checkout-field textarea:focus,
+        .checkout-field select:focus { outline: none; border-color: #6F4E37; }
+        .checkout-actions { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
+        .co-btn { padding: 11px 24px; border: none; border-radius: 40px; cursor: pointer; font-weight: 700; font-size: 14px; transition: background 0.2s; }
+        .co-btn-primary { background: #6F4E37; color: white; }
+        .co-btn-primary:hover { background: #4A2C1A; }
+        .co-btn-secondary { background: #e0d5c1; color: #2c1810; }
+        .co-btn-secondary:hover { background: #cfc1aa; }
+        .checkout-order-summary {
+            background: #f5f0e8; border-radius: 12px; padding: 12px 16px;
+            margin: 1rem 0; text-align: center; font-size: 1rem;
+        }
+        .co-confirm-box { background: #faf6f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 1rem; }
+        .co-confirm-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #ede3d5; font-size: 0.9rem; }
+        .co-confirm-row:last-child { border-bottom: none; }
+        .co-confirm-row span { color: #888; }
+        .co-items-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-bottom: 1rem; }
+        .co-items-table th { background: #2c1810; color: #f5e6d3; padding: 8px 10px; text-align: left; }
+        .co-items-table td { padding: 8px 10px; border-bottom: 1px solid #ede3d5; }
+        .co-items-table tfoot td { background: #f5f0e8; font-weight: 600; }
+
+        @media (max-width: 768px) {
+            .cart-table th, .cart-table td {
+                padding: 0.75rem;
+                font-size: 14px;
+            }
+            .cart-container { padding: 0 1rem; }
+            .action-buttons button, .action-buttons a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body ng-controller="CartController">
+
+<header class="coffee-header">
+    <h1><i class="bi bi-cup-hot-fill"></i> COFFEE BEANS</h1>
+    <ul class="nav-coffee">
+        <li><a class="nav-link" href="index.html">Home</a></li>
+        <li><a class="nav-link" href="menu.html">Menu</a></li>
+        <li><a class="nav-link" href="contact.html">Contact</a></li>
+        <li><a class="nav-link" href="login.html">Login</a></li>
+        <li><a class="nav-link active" href="cart.html">Cart</a></li>
+        <li><a class="nav-link" href="reviews.html">Reviews</a></li>
+    </ul>
+</header>
+
+<div class="cart-container">
+    <h2>🛒 YOUR CART</h2>
+    <div id="cartContent"></div>
+    
+    <!-- AngularJS Live Summary Panel -->
+    <div class="angular-panel">
+        <strong><i class="bi bi-graph-up"></i> AngularJS Live Summary:</strong><br>
+        Total Items: <strong>{{ totalItems }}</strong> | 
+        Subtotal: <strong>Rs {{ subtotal | number }}</strong> | 
+        Discount: <strong>{{ discountPercent }}%</strong> | 
+        Final Total: <strong>Rs {{ finalTotal | number }}</strong>
+    </div>
+</div>
+
+<footer>
+    <p>All rights reserved by Maryam Alishba</p>
+</footer>
+
+<script>
+    // ========== ANGULARJS MODULE & CONTROLLER ==========
+    var app = angular.module('cartApp', []);
+    
+    app.controller('CartController', function($scope, $timeout) {
+        $scope.totalItems = 0;
+        $scope.subtotal = 0;
+        $scope.discountPercent = 0;
+        $scope.finalTotal = 0;
+        
+        // Function to update Angular scope from cart data
+        $scope.updateAngularData = function(cartData, discount) {
+            $scope.totalItems = cartData.reduce(function(sum, item) {
+                return sum + item.quantity;
+            }, 0);
+            
+            $scope.subtotal = cartData.reduce(function(sum, item) {
+                return sum + (item.price * item.quantity);
+            }, 0);
+            
+            $scope.discountPercent = discount;
+            
+            var final = $scope.subtotal;
+            if (discount > 0) {
+                final = final - (final * discount / 100);
+            }
+            $scope.finalTotal = Math.round(final);
+            
+            $scope.$apply();
+        };
+    });
+    
+    // ========== CART STATE ==========
+    let cart = [];
+    let currentDiscount = 0;
+    let appliedPromoCode = '';
+    
+    // Promo codes
+    const promos = {
+        'COFFEE10': 10,
+        'BREW20': 20,
+        'WELCOME5': 5,
+        'SAVE15': 15
+    };
+    
+    // Get Angular scope
+    function getAngularScope() {
+        return angular.element(document.querySelector('[ng-controller="CartController"]')).scope();
+    }
+    
+    // ========== LOAD CART FROM LOCALSTORAGE ==========
+    function loadCart() {
+        const savedCart = localStorage.getItem('coffeeCart');
+        if (savedCart) {
+            try {
+                cart = JSON.parse(savedCart);
+            } catch(e) {
+                cart = [];
+            }
+        }
+        
+        // If cart is empty, add default items
+        if (cart.length === 0) {
+            cart = [
+                { name: "Iced Shaken Espresso", price: 399, quantity: 2 },
+                { name: "Avocado Toast", price: 445, quantity: 1 }
+            ];
+            saveCart();
+        }
+        
+        renderCart();
+    }
+    
+    // ========== SAVE CART TO LOCALSTORAGE ==========
+    function saveCart() {
+        localStorage.setItem('coffeeCart', JSON.stringify(cart));
+    }
+    
+    // ========== CALCULATE SUBTOTAL ==========
+    function calculateSubtotal() {
+        let total = 0;
+        for (let i = 0; i < cart.length; i++) {
+            total += cart[i].price * cart[i].quantity;
+        }
+        return total;
+    }
+    
+    // ========== CALCULATE FINAL TOTAL ==========
+    function calculateFinalTotal() {
+        let subtotal = calculateSubtotal();
+        if (currentDiscount > 0) {
+            return subtotal - (subtotal * currentDiscount / 100);
+        }
+        return subtotal;
+    }
+    
+    // ========== UPDATE QUANTITY ==========
+    function updateQuantity(index, newQuantity) {
+        if (newQuantity <= 0) {
+            // Remove item if quantity becomes 0
+            cart.splice(index, 1);
+            showToast('Item removed from cart', 'error');
+        } else {
+            cart[index].quantity = newQuantity;
+            showToast('Quantity updated', 'success');
+        }
+        saveCart();
+        renderCart();
+    }
+    
+    // ========== REMOVE ITEM ==========
+    function removeItem(index) {
+        const itemName = cart[index].name;
+        cart.splice(index, 1);
+        saveCart();
+        renderCart();
+        showToast(`${itemName} removed from cart`, 'error');
+    }
+    
+    // ========== CLEAR CART ==========
+    function clearCart() {
+        if (confirm('Clear your entire cart?')) {
+            cart = [];
+            saveCart();
+            renderCart();
+            showToast('Cart cleared', 'info');
+        }
+    }
+    
+    // ========== APPLY PROMO CODE ==========
+    function applyPromo() {
+        const input = document.getElementById('promoInput');
+        const code = input.value.trim().toUpperCase();
+        
+        if (promos[code]) {
+            currentDiscount = promos[code];
+            appliedPromoCode = code;
+            showToast(`✓ ${code} applied! ${currentDiscount}% off`, 'success');
+            renderCart();
+        } else {
+            showToast('✗ Invalid promo code', 'error');
+        }
+        input.value = '';
+    }
+    
+    // ========== CHECKOUT ==========
+    function checkout() {
+        if (cart.length === 0) {
+            showToast('Your cart is empty!', 'error');
+            return;
+        }
+        showCheckoutStep(1);
+    }
+
+    // ========== MULTI-STEP CHECKOUT ==========
+    function showCheckoutStep(step) {
+        // Remove existing modal if any
+        $('#checkoutModal').remove();
+
+        const finalTotal = calculateFinalTotal();
+
+        let modalBody = '';
+
+        if (step === 1) {
+            modalBody = `
+                <h5 class="checkout-step-title"><span class="step-badge">1</span> Customer Details</h5>
+                <div class="checkout-field">
+                    <label>Full Name *</label>
+                    <input type="text" id="co_name" placeholder="Enter your full name">
+                </div>
+                <div class="checkout-field">
+                    <label>Email Address *</label>
+                    <input type="email" id="co_email" placeholder="Enter your email">
+                </div>
+                <div class="checkout-field">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="co_phone" placeholder="e.g. 0300-1234567">
+                </div>
+                <div class="checkout-field">
+                    <label>Delivery Address *</label>
+                    <textarea id="co_address" rows="2" placeholder="House/Street/Area, City"></textarea>
+                </div>
+                <div class="checkout-actions">
+                    <button class="co-btn co-btn-secondary" onclick="$('#checkoutModal').remove()">Cancel</button>
+                    <button class="co-btn co-btn-primary" onclick="goToStep2()">Next: Payment &rarr;</button>
+                </div>
+            `;
+        } else if (step === 2) {
+            modalBody = `
+                <h5 class="checkout-step-title"><span class="step-badge">2</span> Payment Details</h5>
+                <div class="checkout-field">
+                    <label>Payment Method *</label>
+                    <select id="co_method">
+                        <option value="">-- Select Method --</option>
+                        <option value="card">Credit / Debit Card</option>
+                        <option value="easypaisa">EasyPaisa</option>
+                        <option value="jazzcash">JazzCash</option>
+                        <option value="cod">Cash on Delivery</option>
+                    </select>
+                </div>
+                <div id="cardFields" style="display:none;">
+                    <div class="checkout-field">
+                        <label>Card Number *</label>
+                        <input type="text" id="co_card" placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                        <div class="checkout-field" style="flex:1;">
+                            <label>Expiry (MM/YY) *</label>
+                            <input type="text" id="co_expiry" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="checkout-field" style="flex:1;">
+                            <label>CVV *</label>
+                            <input type="text" id="co_cvv" placeholder="123" maxlength="3">
+                        </div>
+                    </div>
+                </div>
+                <div id="mobileFields" style="display:none;">
+                    <div class="checkout-field">
+                        <label>Mobile Account Number *</label>
+                        <input type="tel" id="co_mobile_acc" placeholder="03XX-XXXXXXX">
+                    </div>
+                </div>
+                <div class="checkout-order-summary">
+                    <strong>Order Total: <span style="color:#28a745;">Rs ${Math.round(finalTotal).toLocaleString()}</span></strong>
+                </div>
+                <div class="checkout-actions">
+                    <button class="co-btn co-btn-secondary" onclick="showCheckoutStep(1)">&larr; Back</button>
+                    <button class="co-btn co-btn-primary" onclick="goToStep3()">Place Order &rarr;</button>
+                </div>
+            `;
+        } else if (step === 3) {
+            const name = window._coData ? window._coData.name : '';
+            const email = window._coData ? window._coData.email : '';
+            const address = window._coData ? window._coData.address : '';
+            const method = window._coData ? window._coData.method : '';
+            const orderId = 'CB-' + Math.floor(100000 + Math.random() * 900000);
+
+            let itemsHTML = cart.map(item =>
+                `<tr><td>${item.name}</td><td>x${item.quantity}</td><td>Rs ${(item.price * item.quantity).toLocaleString()}</td></tr>`
+            ).join('');
+
+            modalBody = `
+                <div style="text-align:center; margin-bottom:1rem;">
+                    <div style="font-size:3rem;">🎉</div>
+                    <h5 class="checkout-step-title" style="justify-content:center;"><span class="step-badge" style="background:#28a745;">✓</span> Order Confirmed!</h5>
+                    <p style="color:#555; font-size:0.9rem;">Order ID: <strong>${orderId}</strong></p>
+                </div>
+                <div class="co-confirm-box">
+                    <div class="co-confirm-row"><span>Name</span><strong>${name}</strong></div>
+                    <div class="co-confirm-row"><span>Email</span><strong>${email}</strong></div>
+                    <div class="co-confirm-row"><span>Address</span><strong>${address}</strong></div>
+                    <div class="co-confirm-row"><span>Payment</span><strong>${method}</strong></div>
+                </div>
+                <table class="co-items-table">
+                    <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+                    <tbody>${itemsHTML}</tbody>
+                    <tfoot><tr><td colspan="2"><strong>Grand Total</strong></td><td><strong>Rs ${Math.round(finalTotal).toLocaleString()}</strong></td></tr></tfoot>
+                </table>
+                <div class="checkout-actions" style="justify-content:center;">
+                    <button class="co-btn co-btn-primary" onclick="finalizeOrder()">Done</button>
+                </div>
+            `;
+        }
+
+        const modal = $(`
+            <div id="checkoutModal">
+                <div id="checkoutOverlay"></div>
+                <div id="checkoutBox">
+                    <div class="checkout-progress">
+                        <span class="${step >= 1 ? 'prog-active' : ''}">① Details</span>
+                        <span class="prog-sep">›</span>
+                        <span class="${step >= 2 ? 'prog-active' : ''}">② Payment</span>
+                        <span class="prog-sep">›</span>
+                        <span class="${step >= 3 ? 'prog-active' : ''}">③ Confirm</span>
+                    </div>
+                    <div id="checkoutBodyInner">${modalBody}</div>
+                </div>
+            </div>
+        `);
+
+        $('body').append(modal);
+        $('#checkoutOverlay').on('click', function() { if (step < 3) $('#checkoutModal').remove(); });
+
+        // Payment method toggle
+        if (step === 2) {
+            $('#co_method').on('change', function() {
+                const val = $(this).val();
+                if (val === 'card') { $('#cardFields').show(); $('#mobileFields').hide(); }
+                else if (val === 'easypaisa' || val === 'jazzcash') { $('#mobileFields').show(); $('#cardFields').hide(); }
+                else { $('#cardFields').hide(); $('#mobileFields').hide(); }
+            });
+        }
+    }
+
+    function goToStep2() {
+        const name = $('#co_name').val().trim();
+        const email = $('#co_email').val().trim();
+        const phone = $('#co_phone').val().trim();
+        const address = $('#co_address').val().trim();
+        if (!name || !email || !phone || !address) {
+            showToast('Please fill in all customer details', 'error'); return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showToast('Please enter a valid email address', 'error'); return;
+        }
+        window._coData = { name, email, phone, address };
+        showCheckoutStep(2);
+    }
+
+    function goToStep3() {
+        const method = $('#co_method').val();
+        if (!method) { showToast('Please select a payment method', 'error'); return; }
+
+        if (method === 'card') {
+            const card = $('#co_card').val().replace(/\s/g,'');
+            const expiry = $('#co_expiry').val().trim();
+            const cvv = $('#co_cvv').val().trim();
+            if (!card || card.length < 16) { showToast('Enter a valid 16-digit card number', 'error'); return; }
+            if (!expiry || !/^\d{2}\/\d{2}$/.test(expiry)) { showToast('Enter expiry as MM/YY', 'error'); return; }
+            if (!cvv || cvv.length < 3) { showToast('Enter a valid CVV', 'error'); return; }
+        }
+        if (method === 'easypaisa' || method === 'jazzcash') {
+            const mob = $('#co_mobile_acc').val().trim();
+            if (!mob) { showToast('Enter your mobile account number', 'error'); return; }
+        }
+
+        const methodLabels = { card:'Credit/Debit Card', easypaisa:'EasyPaisa', jazzcash:'JazzCash', cod:'Cash on Delivery' };
+        window._coData.method = methodLabels[method] || method;
+        showCheckoutStep(3);
+    }
+
+    function finalizeOrder() {
+        $('#checkoutModal').remove();
+        cart = [];
+        saveCart();
+        renderCart();
+        showToast('🎉 Thank you! Your order has been placed.', 'success');
+        // jQuery animation
+        $('.cart-container').fadeOut(300).fadeIn(300);
+    }
+    
+    // ========== SHOW TOAST MESSAGE (jQuery) ==========
+    function showToast(message, type = 'success') {
+        // Create toast element
+        const toast = $('<div>')
+            .addClass('custom-toast')
+            .css({
+                position: 'fixed',
+                bottom: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: type === 'success' ? '#28a745' : (type === 'error' ? '#dc3545' : '#6F4E37'),
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '40px',
+                fontWeight: '600',
+                zIndex: '1000',
+                fontSize: '14px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                opacity: '0',
+                transition: 'opacity 0.3s'
+            })
+            .html(`<i class="bi ${type === 'success' ? 'bi-check-circle' : (type === 'error' ? 'bi-exclamation-triangle' : 'bi-info-circle')}"></i> ${message}`);
+        
+        $('body').append(toast);
+        
+        // Animate with jQuery
+        toast.animate({ opacity: 1 }, 200);
+        
+        setTimeout(() => {
+            toast.animate({ opacity: 0 }, 200, function() {
+                $(this).remove();
+            });
+        }, 2000);
+    }
+    
+    // ========== RENDER CART TABLE ==========
+    function renderCart() {
+        const cartContent = document.getElementById('cartContent');
+        const subtotal = calculateSubtotal();
+        const finalTotal = calculateFinalTotal();
+        
+        // Update Angular scope
+        const scope = getAngularScope();
+        if (scope) {
+            scope.updateAngularData(cart, currentDiscount);
+        }
+        
+        if (cart.length === 0) {
+            cartContent.innerHTML = `
+                <div class="empty-cart">
+                    <i class="bi bi-cart-x"></i>
+                    <h3 style="margin-top: 1rem;">Your cart is empty</h3>
+                    <p>Add some delicious items from our menu!</p>
+                    <a href="menu.html" class="btn-primary-custom" style="margin-top: 1rem; display: inline-block;">
+                        <i class="bi bi-shop"></i> Browse Menu
+                    </a>
+                </div>
+            `;
+            return;
+        }
+        
+        // Build cart table HTML
+        let tableHTML = `
+            <table class="cart-table" id="cartTable">
+                <thead>
+                    <tr>
+                        <th>ITEM</th>
+                        <th>PRICE</th>
+                        <th>QUANTITY</th>
+                        <th>SUBTOTAL</th>
+                        <th>REMOVE</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        for (let i = 0; i < cart.length; i++) {
+            const item = cart[i];
+            const subtotalItem = item.price * item.quantity;
+            tableHTML += `
+                <tr data-index="${i}">
+                    <td><strong>${item.name}</strong></td>
+                    <td>Rs ${item.price.toLocaleString()}</td>
+                    <td>
+                        <input type="number" 
+                               class="qty-input" 
+                               value="${item.quantity}" 
+                               min="0" 
+                               data-index="${i}"
+                               onchange="updateQuantity(${i}, parseInt(this.value))">
+                    </td>
+                    <td class="subtotal-cell">Rs ${subtotalItem.toLocaleString()}</td>
+                    <td>
+                        <button class="remove-btn" onclick="removeItem(${i})">
+                            <i class="bi bi-trash"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+        
+        // Build total section
+        let totalHTML = `
+            <div class="total-section">
+                <div class="total-price">
+                    TOTAL PRICE: <span>Rs ${Math.round(finalTotal).toLocaleString()}</span>
+                </div>
+                ${currentDiscount > 0 ? `<div class="discount-badge">✓ ${currentDiscount}% discount applied (${appliedPromoCode})</div>` : ''}
+            </div>
+            
+            <div class="promo-section">
+                <input type="text" id="promoInput" placeholder="Enter promo code (COFFEE10, BREW20, SAVE15, WELCOME5)">
+                <button class="apply-btn" onclick="applyPromo()">Apply</button>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="menu.html" class="btn-primary-custom">
+                    <i class="bi bi-plus-circle"></i> Add More Items
+                </a>
+                <button class="btn-primary-custom btn-checkout" onclick="checkout()">
+                    <i class="bi bi-credit-card"></i> Proceed to Checkout
+                </button>
+                <button class="btn-primary-custom" onclick="clearCart()" style="background: #dc3545;">
+                    <i class="bi bi-trash"></i> Clear Cart
+                </button>
+            </div>
+        `;
+        
+        cartContent.innerHTML = tableHTML + totalHTML;
+        
+        // jQuery hover effect on table rows
+        $('#cartTable tbody tr').off('mouseenter mouseleave').on({
+            mouseenter: function() {
+                $(this).css('background', '#fdf5e6').css('transition', '0.2s');
+            },
+            mouseleave: function() {
+                $(this).css('background', '');
+            }
+        });
+    }
+    
+    // ========== INITIALIZE ==========
+    $(document).ready(function() {
+        // Fade in animation for cart container
+        $('.cart-container').hide().fadeIn(600);
+        
+        // Load cart
+        loadCart();
+        
+        // Sticky header effect
+        $(window).on('scroll', function() {
+            if ($(window).scrollTop() > 50) {
+                $('.coffee-header').addClass('compact');
+            } else {
+                $('.coffee-header').removeClass('compact');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="menuApp">
+<head>
+    <title>Coffee Beans — Menu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #faf6f0;
+            color: #2c1810;
+        }
+
+        .coffee-header {
+    background-color: #2c1810;
+    color: #f5e6d3;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 3px solid #c4a27a;
+}
+
+.coffee-header h1 { 
+    font-size: 2.5rem; 
+    letter-spacing: 2px; 
+    margin-bottom: 0.5rem; 
+    font-weight: 600;
+}
+
+.coffee-header h1 i { 
+    margin-right: 10px;
+    color: #c4a27a;
+}
+
+/* Navbar Styles */
+.nav-coffee {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0;
+}
+
+.nav-coffee .nav-link {
+    color: #f5e6d3;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.nav-coffee .nav-link:hover {
+    color: #c4a27a;
+    background: rgba(196, 162, 122, 0.2);
+}
+
+/* ACTIVE PAGE - Circle/Brown Background */
+.nav-coffee .nav-link.active {
+    color: #2c1810 !important;
+    background: #e0b586 !important;
+    font-weight: bold;
+    border-radius: 30px;
+    padding: 0.5rem 1.2rem;
+}
+        .cart-fab {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            background: #c4a27a;
+            color: #2c1810;
+            padding: 9px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            z-index: 200;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cart-fab:hover { background: #a8896a; transform: scale(1.04); }
+        .cart-badge {
+            background: #2c1810;
+            color: #f5e6d3;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 20px;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .cart-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 300; opacity: 0;
+            pointer-events: none; transition: opacity 0.3s;
+        }
+        .cart-overlay.open { opacity: 1; pointer-events: all; }
+        .cart-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: min(380px, 95vw);
+            background: #faf6f0; z-index: 301;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+            display: flex; flex-direction: column;
+            box-shadow: -8px 0 40px rgba(0,0,0,0.25);
+        }
+        .cart-drawer.open { transform: translateX(0); }
+        .cart-drawer-header {
+            background: #2c1810; color: #f5e6d3;
+            padding: 1.2rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .cart-drawer-header h3 { font-size: 1.2rem; letter-spacing: 2px; }
+        .cart-close-btn { background: none; border: none; color: #f5e6d3; font-size: 1.6rem; cursor: pointer; }
+        .cart-items-list { flex: 1; overflow-y: auto; padding: 1rem 1.2rem; }
+        .cart-item-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e8ddd0; }
+        .cart-item-name { flex: 1; font-weight: 600; }
+        .cart-item-price { font-weight: 700; color: #6F4E37; }
+        .qty-controls { display: flex; align-items: center; gap: 8px; background: white; border-radius: 20px; padding: 4px 8px; }
+        .qty-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #6F4E37; width: 24px; height: 24px; border-radius: 50%; }
+        .qty-btn:hover { background: #f0e6d8; }
+        .cart-empty { text-align: center; padding: 3rem 1rem; color: #a0826d; }
+        .cart-footer { padding: 1.2rem 1.5rem; border-top: 2px solid #e8ddd0; background: white; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; }
+        .checkout-btn { width: 100%; background: #6F4E37; color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 700; cursor: pointer; }
+        .checkout-btn:hover { background: #4A2C1A; }
+        .clear-cart-btn { width: 100%; background: none; border: 1px solid #d7c4b8; color: #a0826d; padding: 10px; border-radius: 40px; cursor: pointer; margin-top: 8px; }
+
+        main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .main-title { text-align: center; margin-bottom: 2.5rem; }
+        .main-title h2 { font-size: 2.2rem; border-bottom: 3px solid #c4a27a; padding-bottom: 0.4rem; display: inline-block; }
+        .main-title p { color: #7a5c4a; margin-top: 0.5rem; font-size: 1rem; }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.8rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .category-grid { grid-template-columns: 1fr; }
+        }
+
+        .category-card {
+            border-radius: 22px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 6px 24px rgba(44,24,16,0.13);
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: #2c1810;
+        }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 40px rgba(44,24,16,0.22);
+        }
+
+        .category-card.active-cat {
+            outline: 4px solid #c4a27a;
+            outline-offset: -2px;
+        }
+
+        .category-card-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            opacity: 0.82;
+            transition: opacity 0.3s;
+        }
+
+        .category-card:hover .category-card-img { opacity: 1; }
+
+        .category-card-body {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(0deg, rgba(44,24,16,0.97) 60%, transparent 100%);
+            padding: 1.2rem 1.4rem 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .category-card-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #f5e6d3;
+            letter-spacing: 1.5px;
+        }
+
+        .category-card-icon { font-size: 2rem; }
+
+        .category-card-arrow {
+            background: #c4a27a;
+            color: #2c1810;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 900;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .category-card.active-cat .category-card-arrow { transform: rotate(90deg); }
+
+        .items-panel {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 20px rgba(44,24,16,0.08);
+            animation: slideDown 0.35s ease;
+        }
+
+        .items-panel.visible { display: block; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 1.6rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0e4d4;
+        }
+
+        .panel-header-icon { font-size: 2rem; }
+        .panel-header h3 { font-size: 1.5rem; color: #6F4E37; font-weight: 700; }
+        .panel-header p { font-size: 0.85rem; color: #a0826d; margin-top: 2px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .menu-card {
+            background: #faf6f0;
+            border-radius: 16px;
+            overflow: hidden;
+            text-align: center;
+            padding-bottom: 1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 10px 28px rgba(44,24,16,0.12); }
+
+        .menu-card-img {
+            width: 100%;
+            height: 185px;
+            object-fit: cover;
+        }
+
+        .menu-card h4 { font-size: 1.05rem; margin: 0.8rem 1rem 0.2rem; font-weight: 700; }
+        .menu-card .desc { font-size: 0.78rem; color: #a0826d; margin: 0 1rem 0.4rem; line-height: 1.4; }
+        .price { font-size: 1.15rem; font-weight: 800; color: #6F4E37; margin-bottom: 0.6rem; }
+
+        .add-to-cart {
+            background: #6F4E37;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 40px;
+            cursor: pointer;
+            width: calc(100% - 2rem);
+            margin: 0 1rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .add-to-cart:hover { background: #4A2C1A; }
+
+        .in-cart-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: #c4a27a; color: #2c1810;
+            font-size: 0.7rem; font-weight: 800;
+            padding: 3px 9px; border-radius: 20px; display: none;
+        }
+
+        .type-tag {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(44,24,16,0.75);
+            color: #f5e6d3;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .angular-panel {
+            margin-top: 2rem;
+            padding: 1rem 1.5rem;
+            background: #fff8f0;
+            border-radius: 16px;
+            border: 1px dashed #c4a27a;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #6F4E37;
+        }
+
+        .toast-msg {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            background: #2c1810; color: #f5e6d3;
+            padding: 12px 24px; border-radius: 40px;
+            z-index: 500; opacity: 0; transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast-msg.show { opacity: 1; }
+
+        footer {
+            background: #2c1810;
+            color: #f5e6d3;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body ng-controller="MenuController" id="ngBody">
+
+ <header class="coffee-header">
+    <h1><i class="bi bi-cup-hot-fill"></i> COFFEE BEANS</h1>
+   <ul class="nav-coffee">
+    <li><a class="nav-link" href="index.html">Home</a></li>
+    <li><a class="nav-link active" href="menu.html">Menu</a></li>     <!-- ✅ SAHI -->
+    <li><a class="nav-link" href="contact.html">Contact</a></li>
+    <li><a class="nav-link" href="login.html">Login</a></li>
+    <li><a class="nav-link" href="cart.html">Cart</a></li>
+    <li><a class="nav-link" href="reviews.html">Reviews</a></li>
+</ul>
+</header>
+<button class="cart-fab" onclick="openCart()">
+    <i class="bi bi-bag"></i> Cart
+    <span class="cart-badge" id="cartBadge">0</span>
+</button>
+
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+        <h3>🛒 Your Cart</h3>
+        <button class="cart-close-btn" onclick="closeCart()">&times;</button>
+    </div>
+    <div class="cart-items-list" id="cartItemsList">
+        <div class="cart-empty">🛒 Your cart is empty</div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+        <div class="cart-total">
+            <span>Total</span>
+            <span id="cartTotal">Rs 0</span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+        <button class="clear-cart-btn" onclick="clearCart()">Clear Cart</button>
+    </div>
+</div>
+
+<main>
+    <div class="main-title">
+        <h2>OUR MENU</h2>
+        <p>Click a category to explore what we offer</p>
+    </div>
+
+    <!-- 3 CATEGORY HERO CARDS -->
+    <div class="category-grid">
+
+        <div class="category-card" id="cat-hot" onclick="toggleCategory('hot')">
+            <img class="category-card-img" src="images/cappuccino.png" alt="Hot Coffee">
+            <div class="category-card-body">
+                <div>
+                    <div class="category-card-title">HOT COFFEE</div>
+                    <div style="font-size:0.78rem;color:#c4a27a;margin-top:2px;">7 varieties available</div>
+                </div>
+                <div class="category-card-arrow" id="arrow-hot">›</div>
+            </div>
+        </div>
+
+        <div class="category-card" id="cat-cold" onclick="toggleCategory('cold')">
+            <img class="category-card-img" src="images/cold brew.png" alt="Cold Coffee">
+            <div class="category-card-body">
+                <div>
+                    <div class="category-card-title">COLD COFFEE</div>
+                    <div style="font-size:0.78rem;color:#c4a27a;margin-top:2px;">6 varieties available</div>
+                </div>
+                <div class="category-card-arrow" id="arrow-cold">›</div>
+            </div>
+        </div>
+
+        <div class="category-card" id="cat-croissant" onclick="toggleCategory('croissant')">
+            <img class="category-card-img" src="images/butterc.png" alt="Croissant">
+            <div class="category-card-body">
+                <div>
+                    <div class="category-card-title">CROISSANTS</div>
+                    <div style="font-size:0.78rem;color:#c4a27a;margin-top:2px;">4 varieties available</div>
+                </div>
+                <div class="category-card-arrow" id="arrow-croissant">›</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOT COFFEE PANEL -->
+    <div class="items-panel" id="panel-hot">
+        <div class="panel-header">
+            <span class="panel-header-icon">☕</span>
+            <div>
+                <h3>Hot Coffee</h3>
+                <p>Rich, warm espresso-based drinks crafted fresh for you</p>
+            </div>
+        </div>
+        <div class="menu-grid">
+
+            <div class="menu-card" data-name="Espresso" data-category="hot" data-price="450">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">ESPRESSO</span>
+                <img class="menu-card-img" src="images/espresso.png" alt="Espresso">
+                <h4>Espresso</h4>
+                <div class="desc">Pure, bold single shot — the foundation of all great coffee.</div>
+                <div class="price">Rs 450</div>
+                <button class="add-to-cart" onclick="addToCart('Espresso', 450)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Americano" data-category="hot" data-price="500">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">AMERICANO</span>
+                <img class="menu-card-img" src="images/americano.png" alt="Americano">
+                <h4>Americano</h4>
+                <div class="desc">Espresso diluted with hot water for a smooth, mellow taste.</div>
+                <div class="price">Rs 500</div>
+                <button class="add-to-cart" onclick="addToCart('Americano', 500)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Latte" data-category="hot" data-price="350">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">LATTE</span>
+                <img class="menu-card-img" src="images/latte.png" alt="Latte">
+                <h4>Latte</h4>
+                <div class="desc">Creamy steamed milk with a shot of espresso — velvety perfection.</div>
+                <div class="price">Rs 350</div>
+                <button class="add-to-cart" onclick="addToCart('Latte', 350)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Cappuccino" data-category="hot" data-price="400">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">CAPPUCCINO</span>
+                <img class="menu-card-img" src="images/cappuccino.png" alt="Cappuccino">
+                <h4>Cappuccino</h4>
+                <div class="desc">Equal parts espresso, steamed milk, and thick foam.</div>
+                <div class="price">Rs 400</div>
+                <button class="add-to-cart" onclick="addToCart('Cappuccino', 400)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Flat White" data-category="hot" data-price="430">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">FLAT WHITE</span>
+                <img class="menu-card-img" src="images/flat.png" alt="Flat White">
+                <h4>Flat White</h4>
+                <div class="desc">Velvety microfoam milk over a double ristretto — smooth and strong.</div>
+                <div class="price">Rs 430</div>
+                <button class="add-to-cart" onclick="addToCart('Flat White', 430)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Caramel Macchiato" data-category="hot" data-price="520">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">CARAMEL MACCHIATO</span>
+                <img class="menu-card-img" src="images/caramelmacchiato.png" alt="Caramel Macchiato">
+                <h4>Caramel Macchiato</h4>
+                <div class="desc">Vanilla, espresso, and caramel drizzle — sweet and bold.</div>
+                <div class="price">Rs 520</div>
+                <button class="add-to-cart" onclick="addToCart('Caramel Macchiato', 520)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Matcha Latte" data-category="hot" data-price="480">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">MATCHA</span>
+                <img class="menu-card-img" src="images/matcha.png" alt="Matcha Latte">
+                <h4>Matcha Latte</h4>
+                <div class="desc">Ceremonial grade matcha whisked with creamy steamed milk.</div>
+                <div class="price">Rs 480</div>
+                <button class="add-to-cart" onclick="addToCart('Matcha Latte', 480)">+ Add to Cart</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- COLD COFFEE PANEL -->
+    <div class="items-panel" id="panel-cold">
+        <div class="panel-header">
+            <span class="panel-header-icon">🧊</span>
+            <div>
+                <h3>Cold Coffee</h3>
+                <p>Chilled, refreshing brews — perfect for warm days</p>
+            </div>
+        </div>
+        <div class="menu-grid">
+
+            <div class="menu-card" data-name="Iced Latte" data-category="cold" data-price="480">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">ICED LATTE</span>
+                <img class="menu-card-img" src="images/iced latee.png" alt="Iced Latte">
+                <h4>Iced Latte</h4>
+                <div class="desc">Cold milk, espresso, and ice — light and refreshing.</div>
+                <div class="price">Rs 480</div>
+                <button class="add-to-cart" onclick="addToCart('Iced Latte', 480)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Cold Brew" data-category="cold" data-price="550">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">COLD BREW</span>
+                <img class="menu-card-img" src="images/cold brew.png" alt="Cold Brew">
+                <h4>Cold Brew</h4>
+                <div class="desc">Slow-steeped 12 hours for a smooth, low-acid bold coffee.</div>
+                <div class="price">Rs 550</div>
+                <button class="add-to-cart" onclick="addToCart('Cold Brew', 550)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Frappuccino" data-category="cold" data-price="620">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">FRAPPUCCINO</span>
+                <img class="menu-card-img" src="images/frappccino.png" alt="Frappuccino">
+                <h4>Frappuccino</h4>
+                <div class="desc">Blended ice, coffee, and cream — topped with whipped cream.</div>
+                <div class="price">Rs 620</div>
+                <button class="add-to-cart" onclick="addToCart('Frappuccino', 620)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Iced Caramel Macchiato" data-category="cold" data-price="580">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">ICED CARAMEL</span>
+                <img class="menu-card-img" src="images/iced caramel macchiato.png" alt="Iced Caramel Macchiato">
+                <h4>Iced Caramel Macchiato</h4>
+                <div class="desc">Vanilla, milk, espresso, and caramel drizzle over ice.</div>
+                <div class="price">Rs 580</div>
+                <button class="add-to-cart" onclick="addToCart('Iced Caramel Macchiato', 580)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Iced Americano" data-category="cold" data-price="460">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">ICED AMERICANO</span>
+                <img class="menu-card-img" src="images/icedamericano.png" alt="Iced Americano">
+                <h4>Iced Americano</h4>
+                <div class="desc">Bold espresso over ice with a splash of cold water.</div>
+                <div class="price">Rs 460</div>
+                <button class="add-to-cart" onclick="addToCart('Iced Americano', 460)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Iced Matcha" data-category="cold" data-price="510">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">ICED MATCHA</span>
+                <img class="menu-card-img" src="images/iced matchna.png" alt="Iced Matcha">
+                <h4>Iced Matcha</h4>
+                <div class="desc">Vibrant ceremonial matcha shaken with milk over ice.</div>
+                <div class="price">Rs 510</div>
+                <button class="add-to-cart" onclick="addToCart('Iced Matcha', 510)">+ Add to Cart</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CROISSANT PANEL -->
+    <div class="items-panel" id="panel-croissant">
+        <div class="panel-header">
+            <span class="panel-header-icon">🥐</span>
+            <div>
+                <h3>Croissants</h3>
+                <p>Freshly baked, flaky, buttery pastries — baked in-house daily</p>
+            </div>
+        </div>
+        <div class="menu-grid">
+
+            <div class="menu-card" data-name="Butter Croissant" data-category="croissant" data-price="299">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">CLASSIC</span>
+                <img class="menu-card-img" src="images/butterc.png" alt="Butter Croissant">
+                <h4>Butter Croissant</h4>
+                <div class="desc">Classic golden, flaky layers with pure butter — simple perfection.</div>
+                <div class="price">Rs 299</div>
+                <button class="add-to-cart" onclick="addToCart('Butter Croissant', 299)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Almond Croissant" data-category="croissant" data-price="345">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">ALMOND</span>
+                <img class="menu-card-img" src="images/almondc.png" alt="Almond Croissant">
+                <h4>Almond Croissant</h4>
+                <div class="desc">Filled with almond cream, topped with flaked almonds and icing sugar.</div>
+                <div class="price">Rs 345</div>
+                <button class="add-to-cart" onclick="addToCart('Almond Croissant', 345)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Chocolate Croissant" data-category="croissant" data-price="360">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">CHOCOLATE</span>
+                <img class="menu-card-img" src="images/chocolatec.png" alt="Chocolate Croissant">
+                <h4>Chocolate Croissant</h4>
+                <div class="desc">Buttery pastry wrapped around rich dark chocolate batons.</div>
+                <div class="price">Rs 360</div>
+                <button class="add-to-cart" onclick="addToCart('Chocolate Croissant', 360)">+ Add to Cart</button>
+            </div>
+
+            <div class="menu-card" data-name="Cheese Croissant" data-category="croissant" data-price="380">
+                <span class="in-cart-badge">In Cart</span>
+                <span class="type-tag">CHEESE</span>
+                <img class="menu-card-img" src="images/cheezec.png" alt="Cheese Croissant">
+                <h4>Cheese Croissant</h4>
+                <div class="desc">Warm, flaky croissant oozing with melted cheese inside.</div>
+                <div class="price">Rs 380</div>
+                <button class="add-to-cart" onclick="addToCart('Cheese Croissant', 380)">+ Add to Cart</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- AngularJS Live Summary Panel -->
+    <div class="angular-panel" id="ngPanel">
+        <strong><i class="bi bi-graph-up"></i>Cart Summary:</strong><br>
+        🛒 Items in cart: <strong>{{ totalItems }}</strong> &nbsp;|&nbsp;
+         Total: <strong>Rs {{ cartTotal | number }}</strong> &nbsp;|&nbsp;
+         Open Category: <strong>{{ activeCategory }}</strong>
+    </div>
+
+</main>
+
+<footer>
+    <p>&copy; 2026 Coffee Beans — All rights reserved by Maryam Alishba</p>
+</footer>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script>
+    var app = angular.module('menuApp', []);
+
+    app.controller('MenuController', function($scope) {
+        $scope.totalItems    = 0;
+        $scope.cartTotal     = 0;
+        $scope.activeCategory = 'None';
+
+        $scope.updateAngularData = function(cartData, cat) {
+            $scope.totalItems     = cartData.reduce(function(s,i){ return s + i.quantity; }, 0);
+            $scope.cartTotal      = cartData.reduce(function(s,i){ return s + (i.price * i.quantity); }, 0);
+            $scope.activeCategory = cat || 'None';
+            if (!$scope.$$phase) $scope.$apply();
+        };
+    });
+
+    let cart = [];
+    let openCategory = null;
+
+    function getScope() {
+        return angular.element(document.getElementById('ngPanel')).scope();
+    }
+
+    function loadCart() {
+        try { cart = JSON.parse(localStorage.getItem('coffeeCart')) || []; } catch(e) { cart = []; }
+        updateCartUI(); updateInCartBadges(); updateAngular();
+    }
+
+    function saveCart() {
+        localStorage.setItem('coffeeCart', JSON.stringify(cart));
+        updateAngular();
+    }
+
+    function updateAngular() {
+        const s = getScope();
+        const label = openCategory ? openCategory.charAt(0).toUpperCase() + openCategory.slice(1) : 'None';
+        if (s) s.updateAngularData(cart, label);
+    }
+
+    function addToCart(name, price) {
+        const ex = cart.find(i => i.name === name);
+        if (ex) ex.quantity++;
+        else cart.push({ name, price, quantity: 1 });
+        saveCart(); updateCartUI(); updateInCartBadges();
+        showToast(`✓ ${name} added to cart!`);
+        const btn = event?.target;
+        if (btn) {
+            $(btn).text('✓ Added!').css('background','#4A9E5A');
+            setTimeout(() => $(btn).text('+ Add to Cart').css('background',''), 1200);
+        }
+    }
+
+    function updateQuantity(name, delta) {
+        const item = cart.find(i => i.name === name);
+        if (item) {
+            item.quantity += delta;
+            if (item.quantity <= 0) cart = cart.filter(i => i.name !== name);
+            saveCart(); updateCartUI(); updateInCartBadges();
+        }
+    }
+
+    function clearCart() {
+        if (confirm('Clear your entire cart?')) {
+            cart = []; saveCart(); updateCartUI(); updateInCartBadges(); showToast('Cart cleared');
+        }
+    }
+
+    function checkout() {
+        if (!cart.length) { showToast('Your cart is empty!'); return; }
+        const total = cart.reduce((s,i) => s + (i.price * i.quantity), 0);
+        showToast(`🎉 Order placed! Total: Rs ${total.toLocaleString()}`);
+        $('.cart-drawer').fadeOut(200).fadeIn(200);
+        cart = []; saveCart(); updateCartUI(); updateInCartBadges(); closeCart();
+    }
+
+    function updateCartUI() {
+        const count = cart.reduce((s,i) => s + i.quantity, 0);
+        const total = cart.reduce((s,i) => s + (i.price * i.quantity), 0);
+        $('#cartBadge').text(count);
+        const list   = document.getElementById('cartItemsList');
+        const footer = document.getElementById('cartFooter');
+        if (!cart.length) {
+            list.innerHTML = '<div class="cart-empty">🛒 Your cart is empty<br><span style="font-size:0.8rem">Add some delicious items!</span></div>';
+            footer.style.display = 'none';
+        } else {
+            list.innerHTML = cart.map(item => `
+                <div class="cart-item-row">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="updateQuantity('${item.name.replace(/'/g,"\\'")}', -1)">−</button>
+                        <span>${item.quantity}</span>
+                        <button class="qty-btn" onclick="updateQuantity('${item.name.replace(/'/g,"\\'")}', 1)">+</button>
+                    </div>
+                    <div class="cart-item-price">Rs ${(item.price * item.quantity).toLocaleString()}</div>
+                </div>`).join('');
+            footer.style.display = 'block';
+            document.getElementById('cartTotal').textContent = 'Rs ' + total.toLocaleString();
+        }
+    }
+
+    function updateInCartBadges() {
+        $('.menu-card').each(function() {
+            const name = $(this).data('name');
+            const item = cart.find(i => i.name === name);
+            $(this).find('.in-cart-badge')
+                   .css('display', item && item.quantity > 0 ? 'inline-block' : 'none')
+                   .text(item ? `× ${item.quantity}` : '');
+        });
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+        const t = $('#toastMsg');
+        t.text(msg).addClass('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.removeClass('show'), 2000);
+    }
+
+    function openCart()  { $('#cartOverlay').addClass('open'); $('#cartDrawer').addClass('open'); $('body').css('overflow','hidden'); }
+    function closeCart() { $('#cartOverlay').removeClass('open'); $('#cartDrawer').removeClass('open'); $('body').css('overflow',''); }
+
+    function toggleCategory(cat) {
+        const panel = $('#panel-' + cat);
+        const card  = $('#cat-' + cat);
+        if (openCategory === cat) {
+            panel.removeClass('visible');
+            card.removeClass('active-cat');
+            openCategory = null;
+        } else {
+            if (openCategory) {
+                $('#panel-' + openCategory).removeClass('visible');
+                $('#cat-' + openCategory).removeClass('active-cat');
+            }
+            openCategory = cat;
+            panel.addClass('visible');
+            card.addClass('active-cat');
+            $('html, body').animate({ scrollTop: panel.offset().top - 100 }, 400);
+        }
+        updateAngular();
+    }
+
+    $(document).ready(function() {
+        $(window).on('scroll', function() {
+            if ($(window).scrollTop() > 50) $('#siteHeader').addClass('compact');
+            else $('#siteHeader').removeClass('compact');
+        });
+        $(document).on('mouseenter', '.menu-card', function() {
+            $(this).css('transform','translateY(-5px)');
+        }).on('mouseleave', '.menu-card', function() {
+            $(this).css('transform','translateY(0)');
+        });
+        loadCart();
+    });
+</script>
+
+</body>
+</html>
