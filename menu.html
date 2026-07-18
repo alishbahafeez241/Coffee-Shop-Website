@@ -386,6 +386,17 @@
             width: 100%; padding: 10px 12px; border-radius: 12px;
             border: 1px solid #d7c4b8; font-size: 0.9rem; background: white;
         }
+        .card-details-box {
+            display: none;
+            background: #fff8f0;
+            border: 1px dashed #c4a27a;
+            border-radius: 14px;
+            padding: 12px 14px 4px;
+            margin: 10px 0 4px;
+        }
+        .card-details-box.visible { display: block; }
+        .card-details-row { display: flex; gap: 10px; }
+        .card-details-row .checkout-form-group { flex: 1; }
         .checkout-actions { display: flex; gap: 10px; margin-top: 1.2rem; }
         .checkout-actions button { flex: 1; padding: 12px; border-radius: 40px; font-weight: 700; cursor: pointer; border: none; }
         .checkout-confirm-btn { background: #6F4E37; color: white; }
@@ -818,11 +829,31 @@
                 </div>
                 <div class="checkout-form-group">
                     <label>Payment Method</label>
-                    <select id="checkoutPayment">
+                    <select id="checkoutPayment" onchange="toggleCardDetails()">
                         <option value="cod">Cash on Delivery</option>
                         <option value="card">Credit / Debit Card</option>
                         <option value="wallet">Mobile Wallet</option>
                     </select>
+                </div>
+                <div class="card-details-box" id="cardDetailsBox">
+                    <div class="checkout-form-group">
+                        <label>Card Number</label>
+                        <input type="text" id="checkoutCardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+                    <div class="checkout-form-group">
+                        <label>Name on Card</label>
+                        <input type="text" id="checkoutCardName" placeholder="As shown on card">
+                    </div>
+                    <div class="card-details-row">
+                        <div class="checkout-form-group">
+                            <label>Expiry (MM/YY)</label>
+                            <input type="text" id="checkoutCardExpiry" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="checkout-form-group">
+                            <label>CVV</label>
+                            <input type="password" id="checkoutCardCvv" placeholder="123" maxlength="4">
+                        </div>
+                    </div>
                 </div>
                 <div class="checkout-actions">
                     <button class="checkout-cancel-btn" onclick="closeCheckoutModal()">Cancel</button>
@@ -834,6 +865,13 @@
         $('body').css('overflow','hidden');
     }
 
+    function toggleCardDetails() {
+        const method = document.getElementById('checkoutPayment').value;
+        const box = document.getElementById('cardDetailsBox');
+        if (method === 'card') box.classList.add('visible');
+        else box.classList.remove('visible');
+    }
+
     function closeCheckoutModal() {
         $('#checkoutOverlay').removeClass('open');
         $('body').css('overflow','');
@@ -843,10 +881,35 @@
         const name    = document.getElementById('checkoutName').value.trim();
         const phone   = document.getElementById('checkoutPhone').value.trim();
         const address = document.getElementById('checkoutAddress').value.trim();
+        const payment = document.getElementById('checkoutPayment').value;
 
         if (!name || !phone || !address) {
             showToast('Please fill in all delivery details');
             return;
+        }
+
+        if (payment === 'card') {
+            const cardNumber = document.getElementById('checkoutCardNumber').value.replace(/\s/g,'');
+            const cardName   = document.getElementById('checkoutCardName').value.trim();
+            const cardExpiry = document.getElementById('checkoutCardExpiry').value.trim();
+            const cardCvv    = document.getElementById('checkoutCardCvv').value.trim();
+
+            if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+                showToast('Please fill in all card details');
+                return;
+            }
+            if (!/^\d{13,19}$/.test(cardNumber)) {
+                showToast('Enter a valid card number');
+                return;
+            }
+            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry)) {
+                showToast('Enter expiry as MM/YY');
+                return;
+            }
+            if (!/^\d{3,4}$/.test(cardCvv)) {
+                showToast('Enter a valid CVV');
+                return;
+            }
         }
 
         const total   = cart.reduce((s,i) => s + (i.price * i.quantity), 0);
