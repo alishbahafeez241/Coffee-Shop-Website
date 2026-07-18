@@ -339,6 +339,62 @@
             padding: 1.5rem;
             margin-top: 2rem;
         }
+
+        /* Checkout Modal */
+        .checkout-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 400; opacity: 0;
+            pointer-events: none; transition: opacity 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .checkout-overlay.open { opacity: 1; pointer-events: all; }
+        .checkout-modal {
+            background: #faf6f0;
+            width: min(420px, 92vw);
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 20px;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.25s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .checkout-overlay.open .checkout-modal { transform: scale(1); opacity: 1; }
+        .checkout-modal-header {
+            background: #2c1810; color: #f5e6d3;
+            padding: 1.3rem 1.5rem;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+        .checkout-modal-header h3 { font-size: 1.3rem; letter-spacing: 1px; }
+        .checkout-modal-body { padding: 1.5rem; }
+        .checkout-summary-row {
+            display: flex; justify-content: space-between;
+            padding: 8px 0; font-size: 0.92rem;
+            border-bottom: 1px solid #e8ddd0;
+        }
+        .checkout-summary-total {
+            display: flex; justify-content: space-between;
+            padding-top: 14px; margin-top: 8px;
+            font-size: 1.15rem; font-weight: 800;
+            border-top: 2px solid #2c1810;
+        }
+        .checkout-form-group { margin: 14px 0; }
+        .checkout-form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #6F4E37; }
+        .checkout-form-group input, .checkout-form-group select {
+            width: 100%; padding: 10px 12px; border-radius: 12px;
+            border: 1px solid #d7c4b8; font-size: 0.9rem; background: white;
+        }
+        .checkout-actions { display: flex; gap: 10px; margin-top: 1.2rem; }
+        .checkout-actions button { flex: 1; padding: 12px; border-radius: 40px; font-weight: 700; cursor: pointer; border: none; }
+        .checkout-confirm-btn { background: #6F4E37; color: white; }
+        .checkout-confirm-btn:hover { background: #4A2C1A; }
+        .checkout-cancel-btn { background: none; border: 1px solid #d7c4b8 !important; color: #a0826d; }
+        .checkout-success { text-align: center; padding: 1rem 0; }
+        .checkout-success i { font-size: 3.5rem; color: #4A9E5A; }
+        .checkout-success h4 { margin: 0.8rem 0 0.4rem; }
+        .checkout-order-id { font-size: 0.85rem; color: #a0826d; }
     </style>
 </head>
 <body ng-controller="MenuController" id="ngBody">
@@ -375,6 +431,18 @@
         </div>
         <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
         <button class="clear-cart-btn" onclick="clearCart()">Clear Cart</button>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="checkout-overlay" id="checkoutOverlay">
+    <div class="checkout-modal">
+        <div class="checkout-modal-header">
+            <h3>🧾 Checkout</h3>
+        </div>
+        <div class="checkout-modal-body" id="checkoutModalBody">
+            <!-- Filled dynamically by JS -->
+        </div>
     </div>
 </div>
 
@@ -718,10 +786,85 @@
 
     function checkout() {
         if (!cart.length) { showToast('Your cart is empty!'); return; }
+        openCheckoutModal();
+    }
+
+    function openCheckoutModal() {
         const total = cart.reduce((s,i) => s + (i.price * i.quantity), 0);
-        showToast(`🎉 Order placed! Total: Rs ${total.toLocaleString()}`);
-        $('.cart-drawer').fadeOut(200).fadeIn(200);
-        cart = []; saveCart(); updateCartUI(); updateInCartBadges(); closeCart();
+        const rowsHtml = cart.map(item => `
+            <div class="checkout-summary-row">
+                <span>${item.name} × ${item.quantity}</span>
+                <span>Rs ${(item.price * item.quantity).toLocaleString()}</span>
+            </div>`).join('');
+
+        document.getElementById('checkoutModalBody').innerHTML = `
+            <div id="checkoutSummaryView">
+                ${rowsHtml}
+                <div class="checkout-summary-total">
+                    <span>Total</span>
+                    <span>Rs ${total.toLocaleString()}</span>
+                </div>
+                <div class="checkout-form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="checkoutName" placeholder="Your name">
+                </div>
+                <div class="checkout-form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="checkoutPhone" placeholder="03XXXXXXXXX">
+                </div>
+                <div class="checkout-form-group">
+                    <label>Delivery Address</label>
+                    <input type="text" id="checkoutAddress" placeholder="House, street, area">
+                </div>
+                <div class="checkout-form-group">
+                    <label>Payment Method</label>
+                    <select id="checkoutPayment">
+                        <option value="cod">Cash on Delivery</option>
+                        <option value="card">Credit / Debit Card</option>
+                        <option value="wallet">Mobile Wallet</option>
+                    </select>
+                </div>
+                <div class="checkout-actions">
+                    <button class="checkout-cancel-btn" onclick="closeCheckoutModal()">Cancel</button>
+                    <button class="checkout-confirm-btn" onclick="confirmOrder()">Confirm Order</button>
+                </div>
+            </div>`;
+
+        $('#checkoutOverlay').addClass('open');
+        $('body').css('overflow','hidden');
+    }
+
+    function closeCheckoutModal() {
+        $('#checkoutOverlay').removeClass('open');
+        $('body').css('overflow','');
+    }
+
+    function confirmOrder() {
+        const name    = document.getElementById('checkoutName').value.trim();
+        const phone   = document.getElementById('checkoutPhone').value.trim();
+        const address = document.getElementById('checkoutAddress').value.trim();
+
+        if (!name || !phone || !address) {
+            showToast('Please fill in all delivery details');
+            return;
+        }
+
+        const total   = cart.reduce((s,i) => s + (i.price * i.quantity), 0);
+        const orderId = 'CB' + Date.now().toString().slice(-6);
+
+        document.getElementById('checkoutModalBody').innerHTML = `
+            <div class="checkout-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <h4>Order Placed!</h4>
+                <p>Thank you, ${name}. Your order is on its way.</p>
+                <div class="checkout-order-id">Order ID: ${orderId} &nbsp;|&nbsp; Total: Rs ${total.toLocaleString()}</div>
+                <div class="checkout-actions">
+                    <button class="checkout-confirm-btn" style="width:100%" onclick="closeCheckoutModal()">Done</button>
+                </div>
+            </div>`;
+
+        cart = [];
+        saveCart(); updateCartUI(); updateInCartBadges(); closeCart();
     }
 
     function updateCartUI() {
