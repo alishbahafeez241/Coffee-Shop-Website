@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="menuApp">
+<html lang="en">
 <head>
     <title>Coffee Beans — Menu</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -311,16 +310,6 @@
             letter-spacing: 0.5px;
         }
 
-        .angular-panel {
-            margin-top: 2rem;
-            padding: 1rem 1.5rem;
-            background: #fff8f0;
-            border-radius: 16px;
-            border: 1px dashed #c4a27a;
-            text-align: center;
-            font-size: 0.95rem;
-            color: #6F4E37;
-        }
 
         .toast-msg {
             position: fixed; bottom: 30px; left: 50%;
@@ -408,7 +397,7 @@
         .checkout-order-id { font-size: 0.85rem; color: #a0826d; }
     </style>
 </head>
-<body ng-controller="MenuController" id="ngBody">
+<body id="ngBody">
 
  <header class="coffee-header">
     <h1><i class="bi bi-cup-hot-fill"></i> COFFEE BEANS</h1>
@@ -713,7 +702,6 @@
     </div>
 
 
-
 </main>
 
 <footer>
@@ -723,42 +711,16 @@
 <div class="toast-msg" id="toastMsg"></div>
 
 <script>
-    var app = angular.module('menuApp', []);
-
-    app.controller('MenuController', function($scope) {
-        $scope.totalItems    = 0;
-        $scope.cartTotal     = 0;
-        $scope.activeCategory = 'None';
-
-        $scope.updateAngularData = function(cartData, cat) {
-            $scope.totalItems     = cartData.reduce(function(s,i){ return s + i.quantity; }, 0);
-            $scope.cartTotal      = cartData.reduce(function(s,i){ return s + (i.price * i.quantity); }, 0);
-            $scope.activeCategory = cat || 'None';
-            if (!$scope.$$phase) $scope.$apply();
-        };
-    });
-
     let cart = [];
     let openCategory = null;
 
-    function getScope() {
-        return angular.element(document.getElementById('ngPanel')).scope();
-    }
-
     function loadCart() {
         try { cart = JSON.parse(localStorage.getItem('coffeeCart')) || []; } catch(e) { cart = []; }
-        updateCartUI(); updateInCartBadges(); updateAngular();
+        updateCartUI(); updateInCartBadges();
     }
 
     function saveCart() {
         localStorage.setItem('coffeeCart', JSON.stringify(cart));
-        updateAngular();
-    }
-
-    function updateAngular() {
-        const s = getScope();
-        const label = openCategory ? openCategory.charAt(0).toUpperCase() + openCategory.slice(1) : 'None';
-        if (s) s.updateAngularData(cart, label);
     }
 
     function addToCart(name, price) {
@@ -849,6 +811,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-details-box" id="walletDetailsBox">
+                    <div class="checkout-form-group">
+                        <label>Wallet Provider</label>
+                        <select id="checkoutWalletProvider">
+                            <option value="easypaisa">EasyPaisa</option>
+                            <option value="jazzcash">JazzCash</option>
+                            <option value="sadapay">SadaPay</option>
+                            <option value="nayapay">NayaPay</option>
+                        </select>
+                    </div>
+                    <div class="checkout-form-group">
+                        <label>Wallet Mobile Number</label>
+                        <input type="tel" id="checkoutWalletNumber" placeholder="03XXXXXXXXX" maxlength="11">
+                    </div>
+                </div>
                 <div class="checkout-actions">
                     <button class="checkout-cancel-btn" onclick="closeCheckoutModal()">Cancel</button>
                     <button class="checkout-confirm-btn" onclick="confirmOrder()">Confirm Order</button>
@@ -868,9 +845,10 @@
 
     function toggleCardDetails() {
         const method = document.getElementById('checkoutPayment').value;
-        const box = document.getElementById('cardDetailsBox');
-        if (method === 'card') box.classList.add('visible');
-        else box.classList.remove('visible');
+        const cardBox = document.getElementById('cardDetailsBox');
+        const walletBox = document.getElementById('walletDetailsBox');
+        cardBox.classList.toggle('visible', method === 'card');
+        walletBox.classList.toggle('visible', method === 'wallet');
     }
 
     function closeCheckoutModal() {
@@ -909,6 +887,18 @@
             }
             if (!/^\d{3,4}$/.test(cardCvv)) {
                 showToast('Enter a valid CVV');
+                return;
+            }
+        }
+
+        if (payment === 'wallet') {
+            const walletNumber = document.getElementById('checkoutWalletNumber').value.trim();
+            if (!walletNumber) {
+                showToast('Please enter your wallet mobile number');
+                return;
+            }
+            if (!/^03\d{9}$/.test(walletNumber)) {
+                showToast('Enter a valid mobile number (03XXXXXXXXX)');
                 return;
             }
         }
@@ -994,7 +984,6 @@
             card.addClass('active-cat');
             $('html, body').animate({ scrollTop: panel.offset().top - 100 }, 400);
         }
-        updateAngular();
     }
 
     $(document).ready(function() {
