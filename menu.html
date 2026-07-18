@@ -712,13 +712,7 @@
         </div>
     </div>
 
-    <!-- AngularJS Live Summary Panel -->
-    <div class="angular-panel" id="ngPanel">
-        <strong><i class="bi bi-graph-up"></i>Cart Summary:</strong><br>
-        🛒 Items in cart: <strong>{{ totalItems }}</strong> &nbsp;|&nbsp;
-         Total: <strong>Rs {{ cartTotal | number }}</strong> &nbsp;|&nbsp;
-         Open Category: <strong>{{ activeCategory }}</strong>
-    </div>
+
 
 </main>
 
@@ -829,7 +823,7 @@
                 </div>
                 <div class="checkout-form-group">
                     <label>Payment Method</label>
-                    <select id="checkoutPayment" onchange="toggleCardDetails()">
+                    <select id="checkoutPayment">
                         <option value="cod">Cash on Delivery</option>
                         <option value="card">Credit / Debit Card</option>
                         <option value="wallet">Mobile Wallet</option>
@@ -863,6 +857,13 @@
 
         $('#checkoutOverlay').addClass('open');
         $('body').css('overflow','hidden');
+
+        // Bind payment method change directly (more reliable than inline onchange)
+        const paymentSelect = document.getElementById('checkoutPayment');
+        if (paymentSelect) {
+            paymentSelect.addEventListener('change', toggleCardDetails);
+            toggleCardDetails(); // set correct initial state
+        }
     }
 
     function toggleCardDetails() {
